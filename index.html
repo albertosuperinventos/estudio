@@ -147,7 +147,7 @@ const CONFIG = {
     respaldo: ""   // p. ej. https://estudio-ia.tudominio.com (Raspberry vía túnel)
   }
 };
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const FB_V = "10.12.2";
 
 // ================== UTILIDADES ==================
@@ -655,6 +655,14 @@ function vAjustes() {
       <button class="btn" data-act="presetPed">Cargar horario 1º Pedagogía (Gr 2 · Subgr 4)</button>
     </div>
 
+    <h3 class="sec">Avisos por Telegram</h3>
+    <p class="hint">Cada día a las 22:00 te llega lo que tienes al día siguiente y al otro (48 h antes), y los exámenes también 3 días antes.<br>
+    1) Abre <b>@FamiliaLopBas_bot</b> en Telegram y pulsa Iniciar. 2) Escribe a <b>@userinfobot</b> y copia el número "Id". 3) Pégalo aquí.</p>
+    <label class="l">Tu ID de Telegram</label><input class="f" id="tgId" inputmode="numeric" value="${esc(pf.telegramId)}" placeholder="p. ej. 123456789">
+    <div class="row"><button class="btn" data-act="guardarTg">Guardar y enviar prueba</button>
+    ${pf.telegramId ? `<button class="btn peligro" data-act="quitarTg">Desactivar avisos</button>` : ""}</div>
+    <div id="tgEstado" class="hint">${esc(S.ui.tgMsg || "")}</div>
+
     <h3 class="sec">Servidores de IA</h3>
     <label class="l">Principal (Cloudflare Worker)</label><input class="f" id="iaP" value="${esc(ias.principal || CONFIG.ia.principal)}" placeholder="https://…workers.dev">
     <label class="l">Respaldo (Raspberry)</label><input class="f" id="iaR" value="${esc(ias.respaldo || CONFIG.ia.respaldo)}" placeholder="https://…">
@@ -906,6 +914,22 @@ const ACT = {
       toast(`Horario importado: ${slots.length} franjas. Revísalo aquí abajo.`, 4000);
     } catch(e) { errorIA(e); }
   },
+  async guardarTg() {
+    const id = $("#tgId").value.trim();
+    if (!/^-?\d{5,15}$/.test(id)) return toast("El ID de Telegram son solo números");
+    await DB.update("perfil", { telegramId: id });
+    const estado = t => { S.ui.tgMsg = t; const o = $("#tgEstado"); if (o) o.textContent = t; };
+    estado("Enviando prueba…");
+    try {
+      const [url] = urlsIA(); if (!url) throw new Error("No hay servidor configurado");
+      const r = await fetch(url + "/telegram-test", { method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + await tokenIA() }, body: "{}" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Error " + r.status);
+      estado("✅ Mensaje enviado. Revisa Telegram.");
+    } catch(e) { estado("❌ " + (e.message || e)); }
+  },
+  async quitarTg() { if (confirm("¿Desactivar los avisos por Telegram?")) await DB.update("perfil", { telegramId: null }); },
   guardarIA() {
     localStorage.setItem("estudio_ia", JSON.stringify({ principal: $("#iaP").value.trim(), respaldo: $("#iaR").value.trim() }));
     toast("Guardado");
