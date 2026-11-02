@@ -118,6 +118,10 @@ ul.pts li{margin:4px 0}
 .login h1{text-align:center}
 .err{color:var(--bad);font-size:14px;margin-top:8px}
 .banner{background:var(--warn);color:#14161a;font-size:13px;padding:6px 12px;text-align:center}
+.instalar{display:flex;align-items:center;gap:8px;background:var(--pri);color:#fff;font-size:14px;padding:calc(8px + env(safe-area-inset-top)) 8px 8px 16px}
+.instalar .grow{flex:1}
+.instalar .ib{color:#fff;font-size:26px}
+.ico-share{display:inline-block;border:1.5px solid #fff;border-radius:4px;padding:0 4px;font-size:12px;line-height:16px}
 .chk{width:22px;height:22px;flex:none}
 .hecho .t1{text-decoration:line-through;opacity:.6}
 .tipo{font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;color:#14161a}
@@ -143,7 +147,7 @@ const CONFIG = {
     respaldo: ""   // p. ej. https://estudio-ia.tudominio.com (Raspberry vía túnel)
   }
 };
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const FB_V = "10.12.2";
 
 // ================== UTILIDADES ==================
@@ -381,19 +385,37 @@ const cab = (titulo, sub = "", volver = false, extra = "") => `
 function render() {
   const app = $("#app");
   if (vista === "cargando") { app.innerHTML = `<div class="login"><h1>Estudio</h1><p class="vacio" style="text-align:center">Cargando…</p></div>`; return; }
-  if (vista === "login") { app.innerHTML = vLogin(); return; }
+  if (vista === "login") { app.innerHTML = avisoInstalar() + vLogin(); return; }
   const c = cur();
   const V = { hoy: vHoy, semana: vSemana, asignaturas: vAsignaturas, asig: vAsig, clase: vClase, resumen: vResumen,
               agenda: vAgenda, evento: vEvento, ajustes: vAjustes, editAsig: vEditAsig, editSlot: vEditSlot };
   const raiz = ["hoy","semana","asignaturas","agenda","ajustes"];
   const tabSel = raiz.includes(nav.stack[0].v) ? nav.stack[0].v : "hoy";
   const banner = S.mode === "local" ? `<div class="banner">Modo prueba local: los datos solo se guardan en este dispositivo y la IA no está activa.</div>` : "";
-  app.innerHTML = banner + (V[c.v] || vHoy)(c.p) + `
+  app.innerHTML = banner + avisoInstalar() + (V[c.v] || vHoy)(c.p) + `
     <nav class="bot">
       ${[["hoy","🏠","Hoy"],["semana","🗓️","Semana"],["asignaturas","📚","Asignaturas"],["agenda","📌","Agenda"],["ajustes","⚙️","Ajustes"]]
         .map(([v,i,t]) => `<button data-act="tab" data-v="${v}" class="${v===tabSel?"sel":""}"><span>${i}</span>${t}</button>`).join("")}
     </nav>` + vOverlays();
   if (c.v === "clase") pintarAdjuntos(c.p);
+}
+
+// ---------- Aviso de instalación en iPhone/iPad ----------
+function esIOS() {
+  const ua = navigator.userAgent;
+  return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+function instalada() {
+  return navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+}
+function avisoInstalar() {
+  if (!esIOS() || instalada()) return "";
+  try { if (sessionStorage.getItem("estudio_aviso_cerrado")) return ""; } catch(e) {}
+  const otroNavegador = /CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent);
+  const txt = otroNavegador
+    ? `Para instalar Estudio en el iPhone, abre esta página en <b>Safari</b>.`
+    : `Instala Estudio: pulsa <b>Compartir</b> <span class="ico-share">⬆︎</span> abajo y luego <b>Añadir a pantalla de inicio</b>.`;
+  return `<div class="instalar"><span class="grow">${txt}</span><button class="ib" data-act="cerrarAviso" aria-label="Cerrar">×</button></div>`;
 }
 
 // ---------- Login ----------
@@ -707,6 +729,7 @@ function errorIA(e) { cargando(false); toast(e.message || String(e), 5000); }
 
 const ACT = {
   tab: el => pestaña(el.dataset.v),
+  cerrarAviso() { try { sessionStorage.setItem("estudio_aviso_cerrado", "1"); } catch(e) {} render(); },
   atras: () => atras(),
   async entrar() {
     const e = $("#lgE").value.trim(), p = $("#lgP").value;
