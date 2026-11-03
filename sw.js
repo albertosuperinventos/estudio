@@ -1,5 +1,5 @@
 // Estudio · service worker: la app abre sin conexión; los datos los gestiona Firebase.
-const CACHE = "estudio-v3";
+const CACHE = "estudio-v4";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

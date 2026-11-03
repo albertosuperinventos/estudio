@@ -147,7 +147,7 @@ const CONFIG = {
     respaldo: ""   // p. ej. https://estudio-ia.tudominio.com (Raspberry vía túnel)
   }
 };
-const VERSION = "1.2.0";
+const VERSION = "1.2.1";
 const FB_V = "10.12.2";
 
 // ================== UTILIDADES ==================
@@ -600,7 +600,7 @@ function itemEvento(e) {
   return `<div class="item ${e.hecho ? "hecho" : ""}" data-act="abrirEvento" data-id="${e.id}">
     <input type="checkbox" class="chk" data-act="togHecho" data-id="${e.id}" ${e.hecho ? "checked" : ""}>
     <div class="grow"><div class="t1">${esc(e.titulo || e.tipo)}</div>
-    <div class="t2">${esc(fechaCorta(e.fecha))}${a ? " · " + esc(a.nombre) : ""}</div></div>
+    <div class="t2">${esc(fechaCorta(e.fecha))}${" · " + esc(a ? a.nombre : "Personal")}</div></div>
     <span class="tipo" style="background:${TIPO_COLOR[e.tipo] || "#aaa"}">${esc(e.tipo)}</span></div>`;
 }
 function vAgenda() {
@@ -616,7 +616,7 @@ function vEvento(p) {
   return cab(D().agenda[p.id] ? "Editar" : "Nuevo", "", true) + `<main>
     <label class="l">Tipo</label><select class="f" id="evTipo">${["Examen","Entrega","Tarea","Otro"].map(t => `<option ${t===e.tipo?"selected":""}>${t}</option>`).join("")}</select>
     <label class="l">Fecha</label><input class="f" type="date" id="evFecha" value="${esc(e.fecha)}">
-    <label class="l">Asignatura</label><select class="f" id="evAsig"><option value="">—</option>${listaAsig().map(a => `<option value="${a.id}" ${a.id===e.asig?"selected":""}>${esc(a.nombre)}</option>`).join("")}</select>
+    <label class="l">Asignatura</label><select class="f" id="evAsig"><option value="">Personal</option>${listaAsig().map(a => `<option value="${a.id}" ${a.id===e.asig?"selected":""}>${esc(a.nombre)}</option>`).join("")}</select>
     <label class="l">Título</label><input class="f" id="evTit" value="${esc(e.titulo)}" placeholder="p. ej. Examen tema 3">
     <label class="l">Notas</label><textarea class="f" id="evNota" style="min-height:90px">${esc(e.nota)}</textarea>
     <div class="row"><button class="btn pri" data-act="guardarEvento" data-id="${p.id}">Guardar</button>
