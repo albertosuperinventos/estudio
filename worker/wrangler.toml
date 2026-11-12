@@ -1,0 +1,9 @@
+# Configuración para publicar el Worker con Wrangler (lo usa GitHub Actions)
+name = "estudio-ia"
+main = "worker.js"
+account_id = "9758cefb2d3d02faa4452fa3d9140054"
+compatibility_date = "2025-01-01"
+workers_dev = true
+# Conserva las variables (ALLOWED_EMAILS, etc.) puestas en el panel de Cloudflare.
+# Los secretos (GEMINI_API_KEY, ...) nunca se tocan al publicar.
+keep_vars = true
