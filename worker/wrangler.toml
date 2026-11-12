@@ -7,3 +7,7 @@ workers_dev = true
 # Conserva las variables (ALLOWED_EMAILS, etc.) puestas en el panel de Cloudflare.
 # Los secretos (GEMINI_API_KEY, ...) nunca se tocan al publicar.
 keep_vars = true
+
+# Avisos de Telegram a las 22:00 de Madrid (invierno y verano)
+[triggers]
+crons = ["0 20 * * *", "0 21 * * *"]

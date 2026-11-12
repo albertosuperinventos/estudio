@@ -275,7 +275,7 @@ Responde solo JSON con: "titulo" (breve), "subtitulo" (qué muestra, una línea)
 
 // ---------- Gemini ----------
 async function gemini(env, sistema, partes) {
-  const modelos = lista(env.GEMINI_MODELS || "gemini-2.5-flash,gemini-2.5-flash-lite");
+  const modelos = lista(env.GEMINI_MODELS || "gemini-3.8-flash,gemini-3.5-flash-lite,gemini-2.5-flash");
   let ultimo;
   for (const m of modelos) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
