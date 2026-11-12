@@ -95,6 +95,46 @@ table.rt{border-collapse:collapse;width:100%;font-size:14px}
 table.rt th,table.rt td{border:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:top}
 table.rt th{background:var(--bg3)}
 [contenteditable="true"]:focus{outline:2px solid var(--pri);outline-offset:-2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.chip{background:var(--bg3);border:1px solid var(--bd);border-radius:20px;padding:6px 11px;font-size:13px;cursor:pointer}
+.chip.hay::after{content:" ✓";color:var(--ok)}
+.chip.sel{background:var(--pri);border-color:var(--pri);color:#fff}
+.chip.sel.hay::after{color:#fff}
+.esq{background:var(--bg2);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:16px 14px;font-size:14px;line-height:1.45}
+.esq [contenteditable]{outline:none}
+.esq [contenteditable]:focus{background:var(--bg3);border-radius:4px}
+.eh{border-bottom:1px solid var(--bd);padding-bottom:10px;margin-bottom:12px}
+.ek{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+.et{font-size:20px;font-weight:600;margin:2px 0}
+.es{font-size:13px;color:var(--tx2)}
+.ecen{border:2px solid var(--tx2);border-radius:10px;padding:10px;text-align:center;font-weight:600;font-size:16px}
+.econ{text-align:center;color:var(--tx2);font-size:12px;margin:4px 0}
+.eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ecard{background:var(--bg3);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:6px;padding:8px 10px}
+.ecard b,.esec b{display:block;font-size:14px}
+.esub{display:block;font-size:12px;color:var(--ac2);font-weight:600;margin:1px 0 4px}
+.eul{margin:4px 0 0;padding-left:16px}
+.eul li{margin:2px 0}
+.esin{border-left:2px solid var(--tx2);margin:8px 0 0 12px;padding-left:12px}
+.esin .ecard{position:relative;margin-bottom:8px}
+.esin .ecard::before{content:"";position:absolute;left:-14px;top:14px;width:12px;border-top:2px solid var(--tx2)}
+.eev{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px}
+.efe{font-weight:600;text-align:right;padding-top:8px;font-size:13px}
+.eev .ecard{border-top:1px solid var(--bd);border-left:3px solid var(--ac);margin-bottom:8px}
+.eeta{font-size:12px;font-weight:600;color:var(--ac2);margin:10px 0 6px 72px}
+.ed{color:var(--tx2);font-size:13px;display:block;margin-top:2px}
+table.ect{border-collapse:collapse;width:100%;font-size:13px}
+table.ect th,table.ect td{border:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:top}
+table.ect th{background:var(--bg3);border-top:3px solid var(--ac)}
+table.ect td:first-child{font-weight:600;background:var(--bg3)}
+.epa{display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+.epa.dec{border:1.5px dashed var(--ac)}
+.enum{flex:0 0 26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.eflecha{text-align:center;color:var(--tx2);margin:2px 0}
+.edato{display:block;margin-top:6px;padding:4px 8px;border-radius:6px;background:var(--tint);font-size:13px;font-weight:600}
+.esec{border-left:3px solid var(--ac);padding:4px 0 4px 10px;margin-bottom:10px}
+.eidea{margin-top:14px;padding:10px 12px;background:var(--bg3);border-radius:8px}
+.eidea .ek{margin-bottom:2px}
 ul.pts{margin:0;padding-left:20px}
 ul.pts li{margin:4px 0}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
@@ -212,7 +252,7 @@ const SECC = ["perfil","asignaturas","horario","clases","resumenes","agenda"];
 const S = {
   mode: "local", uid: null, email: "", fb: null,
   data: vacio(), adjCache: {},
-  ui: { semana: null, dia: null, editT: null, selClases: null, repaso: null, visor: null }
+  ui: { semana: null, dia: null, editT: null, selClases: null, repaso: null, visor: null, esq: null }
 };
 function vacio() { return {perfil:{}, asignaturas:{}, horario:{}, clases:{}, resumenes:{}, agenda:{}}; }
 const D = () => S.data;
@@ -504,6 +544,7 @@ function vClase(p) {
       <button class="btn pri" data-act="resumirClase">✨ ${c.ia ? "Regenerar" : "Generar"} resumen y tarjetas</button>
     </div>
     ${c.ia ? bloqueIA(c.ia, `clases/${id}/ia`) : ""}
+    ${conContenido(c) ? bloqueEsq(`clases/${id}`) : ""}
     ${conContenido(c) || c.ia ? `<div class="row"><button class="btn peligro" data-act="borrarClase">Borrar este registro</button></div>` : ""}
   </main>`;
 }
@@ -545,6 +586,89 @@ function bloqueIA(r, path) {
       : `<div class="cards">${tarj.map(t => `<div class="cardf" data-act="flip" data-p="${esc(t.p)}" data-r="${esc(t.r)}">${esc(t.p)}</div>`).join("")}</div>`}
     <p class="hint">Toca un texto para corregirlo. Toca una tarjeta para darle la vuelta.</p>
   </div>`;
+}
+
+// ---------- Esquemas visuales ----------
+const ESQ = [["mapa","Mapa conceptual"],["sinoptico","Cuadro sinóptico"],["linea","Línea del tiempo"],["comparativa","Tabla comparativa"],
+             ["flujo","Diagrama de flujo"],["infografia","Infografía"],["analisis","Esquema de análisis"]];
+const ACENTOS = ["#1D9E75","#534AB7","#D85A30","#2F7BC4","#B07A1A","#B04A72","#6B7A3A"];
+const ACENTOS_TX = { claro: ["#0F6E56","#3C3489","#993C1D","#185FA5","#854F0B","#993556","#4E5A28"],
+                     oscuro: ["#5DCAA5","#AFA9EC","#F0997B","#85B7EB","#EF9F27","#ED93B1","#B5C47A"] };
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function acento(i) {
+  const k = ((i % ACENTOS.length) + ACENTOS.length) % ACENTOS.length;
+  const tx = (matchMedia("(prefers-color-scheme: light)").matches ? ACENTOS_TX.claro : ACENTOS_TX.oscuro)[k];
+  return `--ac:${ACENTOS[k]};--ac2:${tx};--tint:${rgba(ACENTOS[k], .16)}`;
+}
+const ce = (path, v, tag = "span", cls = "") => `<${tag} class="${cls}" contenteditable="true" data-edit="${path}">${esc(v)}</${tag}>`;
+const arrE = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
+const listaEsq = (path, items) => items.length ? `<ul class="eul">${items.map((x, i) => ce(`${path}/${i}`, x, "li")).join("")}</ul>` : "";
+
+function pintaEsq(fmt, e, p, meta) {
+  const head = `<div class="eh"><div class="ek">${esc(meta)}</div>${ce(p + "/titulo", e.titulo || "", "div", "et")}${e.subtitulo ? ce(p + "/subtitulo", e.subtitulo, "div", "es") : ""}</div>`;
+  const pie = e.idea ? `<div class="eidea"><div class="ek">Idea clave</div>${ce(p + "/idea", e.idea, "div")}</div>` : "";
+  let body = "";
+  if (fmt === "mapa" || fmt === "sinoptico") {
+    const ramas = arrE(e.ramas);
+    const tarjeta = (r, i) => `<div class="ecard" style="${acento(i)}">${ce(`${p}/ramas/${i}/t`, r.t || "", "b")}
+      ${r.sub ? ce(`${p}/ramas/${i}/sub`, r.sub, "span", "esub") : ""}${listaEsq(`${p}/ramas/${i}/items`, arrE(r.items))}</div>`;
+    body = `${ce(p + "/centro", e.centro || e.titulo || "", "div", "ecen")}` + (fmt === "mapa"
+      ? `<div class="econ">↓</div><div class="eg">${ramas.map(tarjeta).join("")}</div>`
+      : `<div class="esin">${ramas.map(tarjeta).join("")}</div>`);
+  } else if (fmt === "linea") {
+    const etapas = []; let ant = null;
+    body = arrE(e.eventos).map((ev, i) => {
+      let k = etapas.indexOf(ev.etapa || ""); if (k < 0) { etapas.push(ev.etapa || ""); k = etapas.length - 1; }
+      const cab = ev.etapa && ev.etapa !== ant ? `<div class="eeta" style="${acento(k)}">${esc(ev.etapa)}</div>` : ""; ant = ev.etapa;
+      return cab + `<div class="eev" style="${acento(k)}">${ce(`${p}/eventos/${i}/fecha`, ev.fecha || "", "div", "efe")}
+        <div class="ecard">${ce(`${p}/eventos/${i}/t`, ev.t || "", "b")}${ev.d ? ce(`${p}/eventos/${i}/d`, ev.d, "span", "ed") : ""}</div></div>`;
+    }).join("");
+  } else if (fmt === "comparativa") {
+    const cols = arrE(e.columnas), filas = arrE(e.filas);
+    body = `<div class="tw"><table class="ect"><thead><tr>${cols.map((c, i) => `<th style="${acento(i - 1)}${i ? "" : ";border-top-color:transparent"}">${ce(`${p}/columnas/${i}`, c)}</th>`).join("")}</tr></thead>
+      <tbody>${filas.map((f, ri) => `<tr>${cols.map((_, ci) => `<td>${ce(`${p}/filas/${ri}/${ci}`, arrE(f)[ci] || "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  } else if (fmt === "flujo") {
+    body = arrE(e.pasos).map((s, i) => `${i ? `<div class="eflecha">↓</div>` : ""}<div class="epa ${s.decision ? "dec" : ""}" style="${acento(i)}">
+      <span class="enum">${i + 1}</span><div>${ce(`${p}/pasos/${i}/t`, s.t || "", "b")}${s.d ? ce(`${p}/pasos/${i}/d`, s.d, "span", "ed") : ""}
+      ${s.decision ? `<span class="ed">◇ ${ce(`${p}/pasos/${i}/decision`, s.decision)} · Sí / No</span>` : ""}</div></div>`).join("");
+  } else if (fmt === "infografia") {
+    body = `<div class="eg">${arrE(e.bloques).map((b, i) => `<div class="ecard" style="${acento(i)}">
+      <div style="display:flex;gap:8px;align-items:center"><span class="enum">${i + 1}</span>${ce(`${p}/bloques/${i}/t`, b.t || "", "b")}</div>
+      ${ce(`${p}/bloques/${i}/d`, b.d || "", "span", "ed")}${b.dato ? ce(`${p}/bloques/${i}/dato`, b.dato, "span", "edato") : ""}</div>`).join("")}</div>`;
+  } else if (fmt === "analisis") {
+    body = arrE(e.secciones).map((s, i) => `<div class="esec" style="${acento(i)}">${ce(`${p}/secciones/${i}/t`, s.t || "", "b")}${listaEsq(`${p}/secciones/${i}/items`, arrE(s.items))}</div>`).join("");
+  }
+  return head + body + pie;
+}
+function bloqueEsq(base) {
+  const obj = getPath(D(), base) || {}, todos = obj.esq || {};
+  const sel = S.ui.esq?.base === base ? S.ui.esq.fmt : (ESQ.find(([k]) => todos[k])?.[0] || "mapa");
+  const nombre = ESQ.find(([k]) => k === sel)[1], e = todos[sel], path = `${base}/esq/${sel}`;
+  return `<div class="ia"><h4>Esquemas visuales</h4>
+    <div class="chips">${ESQ.map(([k, t]) => `<button class="chip ${k === sel ? "sel" : ""} ${todos[k] ? "hay" : ""}" data-act="esqFmt" data-base="${base}" data-f="${k}">${t}</button>`).join("")}</div>
+    ${e ? `<div class="esq" id="esqLienzo">${pintaEsq(sel, e, path, asig(obj.asig).nombre + " · " + nombre)}</div>
+      <div class="row"><button class="btn" data-act="esqImg" data-n="${esc(e.titulo || nombre)}">⬇︎ Guardar imagen</button>
+      <button class="btn" data-act="esqGen" data-base="${base}" data-f="${sel}">✨ Regenerar</button>
+      <button class="btn peligro" data-act="esqBorrar" data-path="${path}">Borrar</button></div>
+      <p class="hint">Toca un texto para corregirlo.</p>`
+    : `<div class="row"><button class="btn pri" data-act="esqGen" data-base="${base}" data-f="${sel}">✨ Generar ${nombre.toLowerCase()}</button></div>`}
+  </div>`;
+}
+async function materialEsq(base) {
+  const [col, id] = base.split("/");
+  if (col === "clases") {
+    const c = D().clases[id] || {};
+    const adj = c.nAdj && (c.texto || "").trim().length <= 200 ? Object.values(await DB.getAdj(id)) : [];
+    return { asignatura: asig(c.asig).nombre, alcance: "una clase", clases: [{ fecha: c.fecha, tema: c.tema || "", texto: c.texto || "" }],
+             archivos: adj.map(a => ({ mime: a.mime, data: a.data })), ok: conContenido(c) };
+  }
+  const r = D().resumenes[id] || {};
+  const clases = (r.clases || []).map(cid => D().clases[cid]).filter(c => c && c.fecha).sort((a, b) => (a.fecha + a.ini).localeCompare(b.fecha + b.ini));
+  return { asignatura: asig(r.asig).nombre, alcance: `${clases.length} clases de la asignatura`,
+           clases: clases.map(c => ({ fecha: c.fecha, tema: c.tema || "", texto: c.texto || "" })), archivos: [], ok: clases.some(c => (c.texto || c.tema || "").trim()) };
+}
+function cargarScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
 }
 
 // ---------- Asignaturas ----------
@@ -589,6 +713,7 @@ function vResumen(p) {
   if (!r) return cab("Resumen", "", true) + `<main><p class="vacio">Este resumen ya no existe.</p></main>`;
   return cab(esc(r.ia?.titulo || "Resumen"), esc(asig(r.asig).nombre + " · " + (r.clases||[]).length + " clases"), true) + `<main>
     ${bloqueIA(r.ia || {}, `resumenes/${p.id}/ia`)}
+    ${bloqueEsq(`resumenes/${p.id}`)}
     <div class="row"><button class="btn" data-act="regenRes" data-id="${p.id}">✨ Regenerar</button>
     <button class="btn peligro" data-act="borrarRes" data-id="${p.id}">Borrar resumen</button></div>
   </main>`;
@@ -853,6 +978,42 @@ const ACT = {
   async regenRes(el) {
     const r = D().resumenes[el.dataset.id]; if (!r) return;
     await resumirAsignatura(r.asig, r.clases || [], el.dataset.id);
+  },
+  esqFmt(el) { S.ui.esq = { base: el.dataset.base, fmt: el.dataset.f }; render(); },
+  async esqGen(el) {
+    const base = el.dataset.base, formato = el.dataset.f;
+    const m = await materialEsq(base);
+    if (!m.ok) return toast("Primero apunta algo en la clase");
+    delete m.ok; cargando(true, "Creando el esquema… puede tardar hasta un minuto");
+    try {
+      const r = await ia("esquema", { formato, ...m });
+      if (!r || !r.titulo) throw new Error("La IA no devolvió un esquema válido. Prueba de nuevo.");
+      S.ui.esq = { base, fmt: formato };
+      await DB.set(`${base}/esq/${formato}`, { ...r, creado: Date.now() });
+      cargando(false); toast("Esquema listo");
+    } catch(e) {
+      if (/tarea desconocida/i.test(e.message || "")) e = new Error("El servidor de IA no tiene aún los esquemas: actualiza el código del Worker.");
+      errorIA(e);
+    }
+  },
+  async esqBorrar(el) { if (confirm("¿Borrar este esquema?")) await DB.remove(el.dataset.path); },
+  async esqImg(el) {
+    const nodo = $("#esqLienzo"); if (!nodo) return;
+    cargando(true, "Preparando la imagen…");
+    try {
+      if (!window.html2canvas) await cargarScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+      const lienzo = await html2canvas(nodo, { scale: 2, backgroundColor: getComputedStyle(nodo).backgroundColor, logging: false });
+      const blob = await new Promise(r => lienzo.toBlob(r, "image/png"));
+      const nombre = (norm(el.dataset.n).replace(/ /g, "-") || "esquema") + ".png";
+      const file = new File([blob], nombre, { type: "image/png" });
+      cargando(false);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: el.dataset.n }); } catch(e) {}
+      } else {
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nombre;
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      }
+    } catch(e) { cargando(false); toast("No se pudo crear la imagen (¿sin conexión?)"); }
   },
   async borrarRes(el) { if (confirm("¿Borrar este resumen?")) { await DB.remove("resumenes/" + el.dataset.id); atras(); } },
   nuevoEvento() { ir("evento", { id: nid() }); },

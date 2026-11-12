@@ -205,6 +205,24 @@ async function verificarToken(token, projectId) {
 }
 
 // ---------- Prompts ----------
+// Formatos de esquema visual: qué pedir y estructura JSON que dibuja la app
+const ESQUEMAS = {
+  mapa: { que: "un mapa conceptual: una idea central y de 4 a 7 ramas con los conceptos clave",
+    json: `"centro" (la idea central) y "ramas": [{"t": "concepto", "sub": "autor/es o etiqueta breve, o vacío", "items": ["2 a 4 líneas: definición, concepto clave, ejemplo…"]}]` },
+  sinoptico: { que: "un cuadro sinóptico que clasifique y jerarquice la información de lo general a lo concreto (3 niveles como máximo)",
+    json: `"centro" (tema general) y "ramas": [{"t": "categoría", "sub": "", "items": ["subcategorías o elementos, 2 a 5"]}] (de 2 a 6 ramas)` },
+  linea: { que: "una línea del tiempo en orden cronológico con los hechos clave (de 4 a 12)",
+    json: `"eventos": [{"fecha": "año o fecha exacta", "t": "hecho", "d": "importancia en una línea", "etapa": "nombre de la etapa o periodo (pocas etapas distintas)"}]` },
+  comparativa: { que: "una tabla comparativa entre los 2 a 4 conceptos, teorías o elementos principales del material",
+    json: `"columnas": ["Criterio", "Elemento A", "Elemento B", …] y "filas": [["criterio", "valor A", "valor B", …]] (de 4 a 8 filas: definición, características, autores o fechas, ejemplos, diferencia clave…)` },
+  flujo: { que: "un diagrama de flujo con los pasos de un proceso o procedimiento en orden (de 3 a 9 pasos)",
+    json: `"pasos": [{"t": "paso", "d": "detalle breve o vacío", "decision": "pregunta de sí/no si el paso es una decisión, o vacío"}]` },
+  infografia: { que: "una infografía que explique el tema de un vistazo en bloques (partes, fases o elementos), cada uno con su función y un dato destacado",
+    json: `"bloques": [{"t": "parte o fase", "d": "función o explicación breve", "dato": "dato, cifra o ejemplo destacado, o vacío"}] (de 3 a 8 bloques)` },
+  analisis: { que: "un esquema de análisis que descomponga el tema en profundidad",
+    json: `"secciones": [{"t": "Definición" | "Características" | "Causas" | "Consecuencias" | "Tipos" | "Ejemplo" | otro título adecuado, "items": ["1 a 4 líneas"]}] (de 3 a 6 secciones, elige las que encajen con el tema)` }
+};
+
 function construirPrompt(b) {
   const nivel = String(b.nivel || "estudiante").slice(0, 200);
   const asignatura = String(b.asignatura || "").slice(0, 200);
@@ -229,6 +247,19 @@ function construirPrompt(b) {
 - "puntos": de 3 a 10 ideas clave, frases cortas.
 - "tarjetas": de 6 a 25 tarjetas de pregunta/respuesta tipo examen, respuestas breves y exactas. Formato [{"p": "...", "r": "..."}].
 Lenguaje claro y adaptado al nivel. No inventes contenido que no esté en el material; si es escaso, genera menos. Responde solo JSON con las claves titulo, tabla, puntos y tarjetas.`,
+      partes: [{ text: clases || "El material está en los adjuntos." }, ...archivos]
+    };
+  }
+  if (b.task === "esquema") {
+    const f = ESQUEMAS[b.formato];
+    if (!f) throw new Error("Formato de esquema desconocido");
+    const clases = (b.clases || []).slice(0, 200).map(c =>
+      `### Clase del ${c.fecha || "?"}${c.tema ? " — " + c.tema : ""}\n${String(c.texto || "").slice(0, 20000)}`).join("\n\n");
+    if (!clases.trim() && !archivos.length) throw new Error("No hay contenido para el esquema");
+    return {
+      sistema: `Eres un profesor que prepara material visual de estudio para un alumno de ${nivel}, asignatura "${asignatura}". A partir SOLO del material dado, crea ${f.que}.
+Reglas: textos muy breves (cada línea de 3 a 14 palabras), lenguaje claro y adaptado al nivel, ortografía correcta en español. Si el nivel es universitario, incluye autores, teorías y términos técnicos de referencia cuando aparezcan o sean imprescindibles para entender el material. No inventes datos (fechas, cifras, autores) que no estén en el material o no sean de conocimiento básico seguro del tema. Si el material no encaja bien en este formato, adáptalo lo mejor posible.
+Responde solo JSON con: "titulo" (breve), "subtitulo" (qué muestra, una línea), "idea" (idea clave final en una frase) y además ${f.json}`,
       partes: [{ text: clases || "El material está en los adjuntos." }, ...archivos]
     };
   }
